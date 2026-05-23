@@ -56,15 +56,20 @@ namespace KoridrawsPI.Data
                 .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Evento>()
-                 .HasOne(e => e.Gerente)
+                .HasOne(e => e.Gerente)
                 .WithMany()
                 .HasForeignKey(e => e.GerenteId)
                 .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Evento>()
                 .HasMany(e => e.Imagens)
-                .WithOne()
-                .HasForeignKey(i => i.Id);
+                .WithOne(i => i.Evento)
+                .HasForeignKey(i => i.EventoId);
+
+            modelBuilder.Entity<Item>()
+                .HasMany(i => i.Imagens)
+                .WithOne(i => i.Item)
+                .HasForeignKey(i => i.ItemId);
         }
     }
 }

@@ -1,5 +1,6 @@
 using KoridrawsPI.Data;
 using KoridrawsPI.Seeders;
+using KoridrawsPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -11,10 +12,9 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 
 builder.Services.AddDbContext<KoridrawsPI.Data.Context>(options =>
-options.UseSqlServer(builder.Configuration.GetConnectionString("LocalConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
 builder.Services.AddControllers();
@@ -56,6 +56,9 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
     };
 });
+
+builder.Services.AddScoped<GoogleDriveService>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

@@ -1,5 +1,7 @@
 ﻿using KoridrawsPI.Data;
 using KoridrawsPI.Models;
+using KoridrawsPI.Models.DTOs.Item;
+using KoridrawsPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,10 +14,12 @@ namespace KoridrawsPI.Controllers
     public class ItensController : ControllerBase
     {
         private readonly Context _context;
+        private readonly GoogleDriveService _driveService;
 
-        public ItensController(Context context)
+        public ItensController(Context context, GoogleDriveService driveService)
         {
             _context = context;
+            _driveService = driveService;
         }
 
         // GET: api/Itens
@@ -29,8 +33,54 @@ namespace KoridrawsPI.Controllers
 
         // GET: api/Itens/5
         // Rota PÚBLICA
+        [Authorize(Roles = "Gerente")]
+        [HttpPost]
+        public async Task<ActionResult<Item>> PostItem([FromForm] ItemUploadDto itemDto)
+        {
+            var claimsIdentity = User.Identity as ClaimsIdentity;
+            var gerenteIdClaim = claimsIdentity?.FindFirst("UsuarioId")?.Value;
+
+            var novoItem = new Item
+            {
+                Nome = itemDto.Nome,
+                Preco = itemDto.Preco,
+                GerenteId = gerenteIdClaim != null ? int.Parse(gerenteIdClaim) : null,
+                Imagens = new List<Imagem>()
+            };
+
+            if (itemDto.Imagens != null && itemDto.Imagens.Any())
+            {
+                foreach (var arquivo in itemDto.Imagens)
+                {
+                    if (arquivo.Length > 0)
+                    {
+                        var (url, caminhoCloud) = await _driveService.UploadImagemAsync(arquivo);
+
+                        novoItem.Imagens.Add(new Imagem
+                        {
+                            Url = url,
+                            CaminhoCloud = caminhoCloud
+                        });
+                    }
+                }
+            }
+
+            _context.Itens.Add(novoItem);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetItem), new { id = novoItem.Id }, novoItem);
+        }
+
         [HttpGet("{id}")]
         public async Task<ActionResult<Item>> GetItem(int id)
+        {
+            var item = await _context.Itens.FindAsync(id);
+            if (item == null) return NotFound();
+            return item;
+        }
+        [Authorize(Roles = "Gerente")]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutItem(int id, [FromForm] ItemUpdateDto itemDto)
         {
             var item = await _context.Itens
                 .Include(i => i.Imagens)
@@ -38,60 +88,64 @@ namespace KoridrawsPI.Controllers
 
             if (item == null) return NotFound();
 
-            return item;
-        }
+            item.Nome = itemDto.Nome;
+            item.Preco = itemDto.Preco;
 
-        // POST: api/Itens
-        // PROTEGIDO: Exige um Token JWT válido ONDE a Role seja "Gerente"
-        [Authorize(Roles = "Gerente")]
-        [HttpPost]
-        public async Task<ActionResult<Item>> PostItem([FromForm]Item item)
-        {
-            var claimsIdentity = User.Identity as ClaimsIdentity;
-            var gerenteIdClaim = claimsIdentity?.FindFirst("UsuarioId")?.Value;
-
-            if (gerenteIdClaim != null)
+            if (itemDto.ImagensParaRemover != null && itemDto.ImagensParaRemover.Any())
             {
-                item.GerenteId = int.Parse(gerenteIdClaim);
+                var imagensRemover = item.Imagens
+                    .Where(img => itemDto.ImagensParaRemover.Contains(img.Id))
+                    .ToList();
+
+                foreach (var img in imagensRemover)
+                {
+                    if (!string.IsNullOrEmpty(img.CaminhoCloud))
+                    {
+                        await _driveService.ExcluirImagemAsync(img.CaminhoCloud);
+                    }
+                    _context.Imagens.Remove(img);
+                }
             }
 
-            _context.Itens.Add(item);
+            if (itemDto.NovasImagens != null && itemDto.NovasImagens.Any())
+            {
+                foreach (var arquivo in itemDto.NovasImagens)
+                {
+                    if (arquivo.Length > 0)
+                    {
+                        var (url, caminhoCloud) = await _driveService.UploadImagemAsync(arquivo);
+
+                        item.Imagens.Add(new Imagem
+                        {
+                            Url = url,
+                            CaminhoCloud = caminhoCloud
+                        });
+                    }
+                }
+            }
+
             await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetItem), new { id = item.Id }, item);
-        }
-
-        // PUT: api/Itens/5
-        // PROTEGIDO: Apenas Gerentes
-        [Authorize(Roles = "Gerente")]
-        [HttpPut]
-        public async Task<IActionResult> PutItem([FromForm]int id, [FromForm] Item item)
-        {
-            if (id != item.Id) return BadRequest();
-
-            _context.Entry(item).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ItemExists(id)) return NotFound();
-                else throw;
-            }
 
             return NoContent();
         }
 
-        // DELETE: api/Itens/5
-        // PROTEGIDO: Apenas Gerentes
         [Authorize(Roles = "Gerente")]
-        [HttpDelete]
-        public async Task<IActionResult> DeleteItem([FromForm]int id)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteItem(int id)
         {
-            var item = await _context.Itens.FindAsync(id);
+            var item = await _context.Itens
+                .Include(i => i.Imagens)
+                .FirstOrDefaultAsync(i => i.Id == id);
+
             if (item == null) return NotFound();
+
+            foreach (var img in item.Imagens)
+            {
+                if (!string.IsNullOrEmpty(img.CaminhoCloud))
+                {
+                    await _driveService.ExcluirImagemAsync(img.CaminhoCloud);
+                }
+            }
 
             _context.Itens.Remove(item);
             await _context.SaveChangesAsync();
@@ -99,9 +153,6 @@ namespace KoridrawsPI.Controllers
             return NoContent();
         }
 
-        private bool ItemExists(int id)
-        {
-            return _context.Itens.Any(e => e.Id == id);
-        }
+ 
     }
 }

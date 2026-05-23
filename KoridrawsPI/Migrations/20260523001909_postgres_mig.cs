@@ -1,12 +1,13 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace KoridrawsPI.Migrations
 {
     /// <inheritdoc />
-    public partial class eventos : Migration
+    public partial class postgres_mig : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,9 +16,9 @@ namespace KoridrawsPI.Migrations
                 name: "Estados",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false),
-                    Descricao = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Sigla = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    Id = table.Column<int>(type: "integer", nullable: false),
+                    Descricao = table.Column<string>(type: "text", nullable: false),
+                    Sigla = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -28,12 +29,12 @@ namespace KoridrawsPI.Migrations
                 name: "Usuarios",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Nome = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    SenhaHash = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Papel = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Nome = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Email = table.Column<string>(type: "text", nullable: false),
+                    SenhaHash = table.Column<string>(type: "text", nullable: false),
+                    Papel = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -44,10 +45,10 @@ namespace KoridrawsPI.Migrations
                 name: "Cidades",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Descricao = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    EstadoId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Descricao = table.Column<string>(type: "text", nullable: false),
+                    EstadoId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -64,8 +65,8 @@ namespace KoridrawsPI.Migrations
                 name: "Gerentes",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false),
-                    Setor = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Id = table.Column<int>(type: "integer", nullable: false),
+                    Setor = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -82,11 +83,11 @@ namespace KoridrawsPI.Migrations
                 name: "Itens",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Nome = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Preco = table.Column<double>(type: "float", nullable: false),
-                    GerenteId = table.Column<int>(type: "int", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Nome = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Preco = table.Column<double>(type: "double precision", nullable: false),
+                    GerenteId = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -103,8 +104,8 @@ namespace KoridrawsPI.Migrations
                 name: "Clientes",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false),
-                    ImagemPerfilId = table.Column<int>(type: "int", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false),
+                    ImagemPerfilId = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -121,15 +122,15 @@ namespace KoridrawsPI.Migrations
                 name: "Enderecos",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Rua = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Bairro = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Cep = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Complemento = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Numero = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CidadeId = table.Column<int>(type: "int", nullable: false),
-                    ClienteId = table.Column<int>(type: "int", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Rua = table.Column<string>(type: "text", nullable: false),
+                    Bairro = table.Column<string>(type: "text", nullable: false),
+                    Cep = table.Column<string>(type: "text", nullable: false),
+                    Complemento = table.Column<string>(type: "text", nullable: true),
+                    Numero = table.Column<string>(type: "text", nullable: false),
+                    CidadeId = table.Column<int>(type: "integer", nullable: false),
+                    ClienteId = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -151,11 +152,11 @@ namespace KoridrawsPI.Migrations
                 name: "Pedidos",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    DataEmissao = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ClienteId = table.Column<int>(type: "int", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    DataEmissao = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ClienteId = table.Column<int>(type: "integer", nullable: false),
+                    Status = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -172,13 +173,13 @@ namespace KoridrawsPI.Migrations
                 name: "Eventos",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Nome = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Descricao = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Data = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    EnderecoId = table.Column<int>(type: "int", nullable: false),
-                    GerenteId = table.Column<int>(type: "int", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Nome = table.Column<string>(type: "text", nullable: false),
+                    Descricao = table.Column<string>(type: "text", nullable: false),
+                    Data = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    EnderecoId = table.Column<int>(type: "integer", nullable: false),
+                    GerenteId = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -201,8 +202,8 @@ namespace KoridrawsPI.Migrations
                 name: "ItemPedido",
                 columns: table => new
                 {
-                    ItensId = table.Column<int>(type: "int", nullable: false),
-                    PedidosId = table.Column<int>(type: "int", nullable: false)
+                    ItensId = table.Column<int>(type: "integer", nullable: false),
+                    PedidosId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -225,20 +226,21 @@ namespace KoridrawsPI.Migrations
                 name: "Imagens",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false),
-                    Url = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CaminhoCloud = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ItemId = table.Column<int>(type: "int", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Url = table.Column<string>(type: "text", nullable: false),
+                    CaminhoCloud = table.Column<string>(type: "text", nullable: true),
+                    ItemId = table.Column<int>(type: "integer", nullable: true),
+                    EventoId = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Imagens", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Imagens_Eventos_Id",
-                        column: x => x.Id,
+                        name: "FK_Imagens_Eventos_EventoId",
+                        column: x => x.EventoId,
                         principalTable: "Eventos",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Imagens_Itens_ItemId",
                         column: x => x.ItemId,
@@ -281,6 +283,11 @@ namespace KoridrawsPI.Migrations
                 name: "IX_Eventos_GerenteId",
                 table: "Eventos",
                 column: "GerenteId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Imagens_EventoId",
+                table: "Imagens",
+                column: "EventoId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Imagens_ItemId",

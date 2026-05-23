@@ -26,7 +26,7 @@ namespace KoridrawsPI.Controllers
         }
 
         [HttpPost("registro")]
-        public async Task<IActionResult> Registrar([FromBody] RegistroDto modelo)
+        public async Task<IActionResult> Registrar([FromForm] RegistroDto modelo)
         {
             // 1. Verifica se o e-mail já existe na tabela base (Usuarios)
             if (await _context.Usuarios.AnyAsync(u => u.Email == modelo.Email))
@@ -69,7 +69,7 @@ namespace KoridrawsPI.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginDto modelo)
+        public async Task<IActionResult> Login([FromForm] LoginDto modelo)
         {
             // 1. Busca qualquer usuário (Cliente ou Gerente) pelo e-mail
             var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == modelo.Email);
