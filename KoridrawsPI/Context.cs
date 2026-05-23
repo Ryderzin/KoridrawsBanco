@@ -1,7 +1,5 @@
 ﻿using KoridrawsPI.Models;
-using KoridrawsPI.Models;
 using KoridrawsPI.Models.Abstract;
-using KoridrawsPI.Models.DTOs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;

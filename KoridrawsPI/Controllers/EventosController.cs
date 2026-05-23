@@ -1,12 +1,10 @@
 ﻿using KoridrawsPI.Data;
 using KoridrawsPI.Models;
-using KoridrawsPI.Models.DTOs;
 using KoridrawsPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KoridrawsPI.Data;
-using KoridrawsPI.Models;
 using KoridrawsPI.Services;
 using System.Security.Claims;
 

@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace KoridrawsPI.Models.DTOs
+namespace KoridrawsPI.Models
 {
     public class Evento
     {

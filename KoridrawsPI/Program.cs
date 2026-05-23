@@ -58,6 +58,16 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddScoped<GoogleDriveService>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()   // This enables "*"
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 app.UseSwagger();
