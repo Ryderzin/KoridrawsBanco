@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KoridrawsPI.Migrations
 {
     /// <inheritdoc />
-    public partial class postgres_mig : Migration
+    public partial class postgres : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

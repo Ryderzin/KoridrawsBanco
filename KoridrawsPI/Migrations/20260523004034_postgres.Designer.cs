@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KoridrawsPI.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20260523001909_postgres_mig")]
-    partial class postgres_mig
+    [Migration("20260523004034_postgres")]
+    partial class postgres
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

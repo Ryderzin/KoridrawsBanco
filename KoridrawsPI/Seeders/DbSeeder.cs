@@ -11,7 +11,7 @@ namespace KoridrawsPI.Seeders
         public static async Task SeedIbgeDataAsync(Context context)
         {
             // Verifica se os estados já foram inseridos para não duplicar
-            if (context.Estados.Any()) return;
+          if (context.Estados.Any()) return;
 
             using var httpClient = new HttpClient();
 
