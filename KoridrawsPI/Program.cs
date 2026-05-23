@@ -68,6 +68,8 @@ builder.Services.AddCors(options =>
     });
 });
 
+
+
 var app = builder.Build();
 
 app.UseSwagger();
@@ -91,6 +93,8 @@ using (var scope = app.Services.CreateScope())
     await DbSeeder.SeedIbgeDataAsync(context);
 
 }
+
+app.UseCors();
 
 app.UseHttpsRedirection();
 
