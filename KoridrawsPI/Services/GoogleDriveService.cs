@@ -18,13 +18,28 @@ namespace KoridrawsPI.Services
             using (var stream = new FileStream(_credentialsPath, FileMode.Open, FileAccess.Read))
             {
                 string credPath = "token.json";
+                string writablePath = Path.Combine(Path.GetTempPath(), "token.json");
+
+                if (Directory.Exists(credPath))
+                {
+                    if (!Directory.Exists(writablePath))
+                    {
+                        Directory.CreateDirectory(writablePath);
+                    }
+
+                    foreach (var file in Directory.GetFiles(credPath))
+                    {
+                        var dest = Path.Combine(writablePath, Path.GetFileName(file));
+                        File.Copy(file, dest, true);
+                    }
+                }
 
                 credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
                     GoogleClientSecrets.FromStream(stream).Secrets,
                     Scopes,
                     "user",
                     CancellationToken.None,
-                    new FileDataStore(credPath, true));
+                    new FileDataStore(writablePath, true));
             }
 
             return new DriveService(new BaseClientService.Initializer()
