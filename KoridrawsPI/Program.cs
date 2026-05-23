@@ -60,11 +60,16 @@ builder.Services.AddScoped<GoogleDriveService>();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Minha API v1");
+
+    // Essa linha extra é um truque bem legal para apresentações:
+    // Faz o Swagger abrir direto na rota principal (ex: sua-api.onrender.com)
+    // sem precisar digitar "/swagger" no final da URL.
+    c.RoutePrefix = string.Empty;
+});
 
 using (var scope = app.Services.CreateScope())
 {
