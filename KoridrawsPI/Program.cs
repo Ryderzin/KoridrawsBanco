@@ -34,7 +34,6 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddAutoMapper(typeof(Program).Assembly);
 var secretKey = builder.Configuration["JWT:Secret"] ?? throw new ArgumentNullException("JWT Secret is missing");
 
 builder.Services.AddAuthentication(options =>
