@@ -74,10 +74,18 @@ namespace KoridrawsPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Item>> GetItem(int id)
         {
-            var item = await _context.Itens.FindAsync(id);
-            if (item == null) return NotFound();
+            var item = await _context.Itens
+                .Include(i => i.Imagens)
+                .FirstOrDefaultAsync(i => i.Id == id);
+
+            if (item == null)
+            {
+                return NotFound();
+            }
+
             return item;
         }
+
         [Authorize(Roles = "Gerente")]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutItem(int id, [FromForm] ItemUpdateDto itemDto)
