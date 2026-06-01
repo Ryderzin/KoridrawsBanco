@@ -19,4 +19,5 @@ namespace KoridrawsPI.Models
         [Required]
         public int CidadeId { get; set; }
     }
+
 }

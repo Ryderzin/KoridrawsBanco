@@ -34,6 +34,7 @@ namespace KoridrawsPI.Controllers
                     .Include(c => c.Enderecos)
                         .ThenInclude(e => e.Cidade)
                             .ThenInclude(cid => cid.Estado)
+                      .Include(c => c.Pedidos)
                     .FirstOrDefaultAsync(c => c.Email == email);
 
                 if (cliente == null)

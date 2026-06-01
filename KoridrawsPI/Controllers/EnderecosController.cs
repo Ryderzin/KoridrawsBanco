@@ -1,9 +1,10 @@
-﻿using KoridrawsPI.Models;
+﻿using KoridrawsPI.Data;
+using KoridrawsPI.Models;
+using KoridrawsPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using KoridrawsPI.Data;
-using KoridrawsPI.Models;
+using static KoridrawsPI.Models.DTOs.Ibge;
 
 namespace SuaLojaApi.Controllers
 {
@@ -90,6 +91,36 @@ namespace SuaLojaApi.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        [HttpGet("estados")]
+        public async Task<ActionResult<IEnumerable<EstadoDropdownDto>>> GetEstados()
+        {
+            return await _context.Estados
+                .OrderBy(e => e.Descricao)
+                .Select(e => new EstadoDropdownDto
+                {
+                    Id = e.Id,
+                    Nome = e.Descricao,
+                    Sigla = e.Sigla
+                })
+                .ToListAsync();
+        }
+
+        [HttpGet("estados/{estadoId}/cidades")]
+        public async Task<ActionResult<IEnumerable<CidadeDropdownDto>>> GetCidadesPorEstado(int estadoId)
+        {
+            var cidades = await _context.Cidades
+                .Where(c => c.EstadoId == estadoId)
+                .OrderBy(c => c.Descricao)
+                .Select(c => new CidadeDropdownDto
+                {
+                    Id = c.Id,
+                    Nome = c.Descricao
+                })
+                .ToListAsync();
+
+            return cidades;
         }
     }
 }

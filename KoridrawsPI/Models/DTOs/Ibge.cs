@@ -39,6 +39,18 @@ namespace KoridrawsPI.Models.DTOs
             [JsonPropertyName("UF")]
             public IbgeEstadoDto Uf { get; set; } = new();
         }
+
+        public class EstadoDropdownDto
+        {
+            public int Id { get; set; }
+            public string Nome { get; set; } = string.Empty;
+            public string Sigla { get; set; } = string.Empty;
+        }
+        public class CidadeDropdownDto
+        {
+            public int Id { get; set; }
+            public string Nome { get; set; } = string.Empty;
+        }
     }
 }
 
