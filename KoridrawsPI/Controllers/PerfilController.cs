@@ -17,78 +17,49 @@ namespace KoridrawsPI.Controllers
             _context = context;
         }
 
-        [HttpGet("GetProfile")]
-        public async Task<IActionResult> GetMeuPerfil()
+        [HttpGet]
+        public async Task<ActionResult> GetProfile()
         {
-            var email = User.Identity?.Name;
+            var claimId = User.FindFirst("UsuarioId");
 
-            if (string.IsNullOrEmpty(email))
+            if (claimId == null || !int.TryParse(claimId.Value, out int usuarioId))
             {
                 return Unauthorized();
             }
 
-            if (User.IsInRole("Cliente"))
+            var cliente = await _context.Clientes
+                .FirstOrDefaultAsync(c => c.Id == usuarioId);
+
+            if (cliente == null)
             {
-                var cliente = await _context.Clientes
-                    .Include(c => c.ImagemPerfil)
-                    .Include(c => c.Enderecos)
-                        .ThenInclude(e => e.Cidade)
-                            .ThenInclude(cid => cid.Estado)
-                      .Include(c => c.Pedidos)
-                    .FirstOrDefaultAsync(c => c.Email == email);
-
-                if (cliente == null)
-                {
-                    return NotFound();
-                }
-
-                return Ok(new
-                {
-                    Tipo = "Cliente",
-                    Email = email,
-                    Dados = new
-                    {
-                        cliente.Id,
-                        cliente.Nome,
-                        Imagem = cliente.ImagemPerfil?.Url,
-                        Enderecos = cliente.Enderecos.Select(e => new
-                        {
-                            e.Id,
-                            e.Rua,
-                            e.Numero,
-                            e.Bairro,
-                            e.Cep,
-                            e.Complemento,
-                            Cidade = e.Cidade?.Descricao,
-                            Estado = e.Cidade?.Estado?.Sigla
-                        })
-                    }
-                });
+                return NotFound();
             }
 
-            if (User.IsInRole("Gerente"))
+            var enderecos = await _context.Enderecos
+                .Include(e => e.Cidade).ThenInclude(e => e.Estado)
+                .Where(e => e.ClienteId == usuarioId)
+                .ToListAsync();
+
+            var pedidos = await _context.Pedidos
+                .Include(p => p.Endereco)
+                .Include(p => p.ItensPedido)
+                    .ThenInclude(ip => ip.Item)
+                .Where(p => p.ClienteId == usuarioId)
+                .OrderByDescending(p => p.DataEmissao)
+                .ToListAsync();
+
+            return Ok(new
             {
-                var gerente = await _context.Gerentes.FirstOrDefaultAsync(g => g.Email == email);
-
-                if (gerente == null)
+                Perfil = new
                 {
-                    return NotFound();
-                }
-
-                return Ok(new
-                {
-                    Tipo = "Gerente",
-                    Email = email,
-                    Dados = new
-                    {
-                        gerente.Id,
-                        gerente.Nome,
-                        gerente.Setor
-                    }
-                });
-            }
-
-            return BadRequest();
+                    cliente.Id,
+                    cliente.Nome,
+                    cliente.Email,
+                    cliente.Papel
+                },
+                Enderecos = enderecos,
+                Pedidos = pedidos
+            });
         }
     }
 }

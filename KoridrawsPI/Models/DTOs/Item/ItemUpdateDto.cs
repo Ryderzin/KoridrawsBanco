@@ -6,7 +6,7 @@ public class ItemUpdateDto
     public string Nome { get; set; } = string.Empty;
 
     [Required]
-    public double Preco { get; set; }
+    public decimal Preco { get; set; }
 
     public List<int> ImagensParaRemover { get; set; } = new List<int>();
 

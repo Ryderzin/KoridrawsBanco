@@ -4,6 +4,7 @@ using KoridrawsPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using static KoridrawsPI.Models.DTOs.Ibge;
 
 namespace SuaLojaApi.Controllers
@@ -40,9 +41,22 @@ namespace SuaLojaApi.Controllers
         }
 
         [Authorize]
-        [HttpPost]
+        [HttpPost("Post")]
         public async Task<ActionResult<Endereco>> PostEndereco([FromForm] EnderecoDto enderecoDto)
         {
+            var claimId = User.FindFirst("UsuarioId");
+
+            if (claimId == null)
+            {
+                var claimsDisponiveis = User.Claims.Select(c => new { c.Type, c.Value }).ToList();
+                return StatusCode(401, new { Erro = "ID não encontrado no token.", Claims = claimsDisponiveis });
+            }
+
+            if (!int.TryParse(claimId.Value, out int clienteId))
+            {
+                return BadRequest(new { Erro = "ID inválido no token.", Valor = claimId.Value });
+            }
+
             var novoEndereco = new Endereco
             {
                 Rua = enderecoDto.Rua,
@@ -50,7 +64,8 @@ namespace SuaLojaApi.Controllers
                 Bairro = enderecoDto.Bairro,
                 Cep = enderecoDto.Cep,
                 Complemento = enderecoDto.Complemento,
-                CidadeId = enderecoDto.CidadeId
+                CidadeId = enderecoDto.CidadeId,
+                ClienteId = clienteId
             };
 
             _context.Enderecos.Add(novoEndereco);
@@ -60,7 +75,7 @@ namespace SuaLojaApi.Controllers
         }
 
         [Authorize]
-        [HttpPut("{id}")]
+        [HttpPut("Put/{id}")]
         public async Task<IActionResult> PutEndereco(int id, [FromForm] EnderecoDto enderecoDto)
         {
             var endereco = await _context.Enderecos.FindAsync(id);
@@ -80,7 +95,7 @@ namespace SuaLojaApi.Controllers
         }
 
         [Authorize]
-        [HttpDelete("{id}")]
+        [HttpDelete("Delete/{id}")]
         public async Task<IActionResult> DeleteEndereco(int id)
         {
             var endereco = await _context.Enderecos.FindAsync(id);

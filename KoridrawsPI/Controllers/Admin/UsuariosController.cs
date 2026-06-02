@@ -29,7 +29,8 @@ namespace KoridrawsPI.Controllers
                     Id = u.Id,
                     Nome = u.Nome,
                     Email = u.Email,
-                    Senha = u.SenhaHash
+                    Senha = u.SenhaHash,
+                    Role = u.Papel
                 })
                 .ToListAsync();
 

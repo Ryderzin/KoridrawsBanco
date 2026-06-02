@@ -3,7 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KoridrawsPI.Data;
 using KoridrawsPI.Models;
-using System.Security.Claims;
+using KoridrawsPI.Models.DTOs;
+
 namespace KoridrawsPI.Controllers
 {
     [Authorize]
@@ -25,14 +26,23 @@ namespace KoridrawsPI.Controllers
             {
                 return await _context.Pedidos
                     .Include(p => p.Cliente)
-                    .Include(p => p.Itens)
+                    .Include(p => p.Endereco)
+                    .Include(p => p.ItensPedido)
+                        .ThenInclude(ip => ip.Item)
                     .ToListAsync();
             }
 
-            var emailUsuario = User.Identity?.Name;
+            var claimId = User.FindFirst("UsuarioId");
+            if (claimId == null || !int.TryParse(claimId.Value, out int clienteId))
+            {
+                return Unauthorized();
+            }
+
             return await _context.Pedidos
-                .Include(p => p.Itens)
-                .Where(p => p.Cliente!.Email == emailUsuario)
+                .Include(p => p.Endereco)
+                .Include(p => p.ItensPedido)
+                    .ThenInclude(ip => ip.Item)
+                .Where(p => p.ClienteId == clienteId)
                 .ToListAsync();
         }
 
@@ -41,12 +51,20 @@ namespace KoridrawsPI.Controllers
         {
             var pedido = await _context.Pedidos
                 .Include(p => p.Cliente)
-                .Include(p => p.Itens)
+                .Include(p => p.Endereco)
+                .Include(p => p.ItensPedido)
+                    .ThenInclude(ip => ip.Item)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (pedido == null) return NotFound();
 
-            if (!User.IsInRole("Gerente") && pedido.Cliente?.Email != User.Identity?.Name)
+            var claimId = User.FindFirst("UsuarioId");
+            if (claimId == null || !int.TryParse(claimId.Value, out int clienteId))
+            {
+                return Unauthorized();
+            }
+
+            if (!User.IsInRole("Gerente") && pedido.ClienteId != clienteId)
             {
                 return Forbid();
             }
@@ -55,24 +73,52 @@ namespace KoridrawsPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Pedido>> PostPedido([FromForm] Pedido pedido)
+        public async Task<ActionResult<Pedido>> PostPedido([FromForm] PedidoCriacaoDto dto)
         {
-            var emailUsuario = User.Identity?.Name;
-            var cliente = await _context.Clientes.FirstOrDefaultAsync(c => c.Email == emailUsuario);
-
-            if (cliente == null) return BadRequest("Perfil de cliente não encontrado.");
-
-            pedido.ClienteId = cliente.Id;
-            pedido.Cliente = null;
-            pedido.DataEmissao = DateTime.UtcNow;
-            pedido.Status = StatusPedido.Criado;
-
-            if (pedido.Itens != null && pedido.Itens.Any())
+            var claimId = User.FindFirst("UsuarioId");
+            if (claimId == null || !int.TryParse(claimId.Value, out int clienteId))
             {
-                var itemIds = pedido.Itens.Select(i => i.Id).ToList();
-                var itensDoBanco = await _context.Itens.Where(i => itemIds.Contains(i.Id)).ToListAsync();
-                pedido.Itens = itensDoBanco;
+                return Unauthorized();
             }
+
+            var enderecoValido = await _context.Enderecos
+                .AnyAsync(e => e.Id == dto.EnderecoId && e.ClienteId == clienteId);
+
+            if (!enderecoValido) return BadRequest("Endereço inválido ou não pertence a este cliente.");
+
+            if (dto.Itens == null || !dto.Itens.Any()) return BadRequest("O pedido deve conter itens.");
+
+            var pedido = new Pedido
+            {
+                ClienteId = clienteId,
+                EnderecoId = dto.EnderecoId,
+                Status = StatusPedido.Criado,
+                Pagamento = dto.Pagamento,
+                DataEmissao = DateTime.UtcNow,
+                ItensPedido = new List<PedidoItem>()
+            };
+
+            decimal valorTotal = 0;
+
+            foreach (var itemDto in dto.Itens)
+            {
+                if (itemDto.Quantidade <= 0) return BadRequest("A quantidade deve ser maior que zero.");
+
+                var itemBanco = await _context.Itens.FindAsync(itemDto.ItemId);
+                if (itemBanco == null) return BadRequest($"Item com ID {itemDto.ItemId} não encontrado.");
+
+                var pedidoItem = new PedidoItem
+                {
+                    ItemId = itemBanco.Id,
+                    Quantidade = itemDto.Quantidade,
+                    PrecoUnitario = itemBanco.Preco
+                };
+
+                valorTotal += pedidoItem.Quantidade * pedidoItem.PrecoUnitario;
+                pedido.ItensPedido.Add(pedidoItem);
+            }
+
+            pedido.ValorTotal = valorTotal;
 
             _context.Pedidos.Add(pedido);
             await _context.SaveChangesAsync();

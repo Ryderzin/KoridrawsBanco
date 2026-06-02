@@ -15,6 +15,7 @@ namespace KoridrawsPI.Data
         public DbSet<Gerente> Gerentes { get; set; }
         public DbSet<Item> Itens { get; set; }
         public DbSet<Pedido> Pedidos { get; set; }
+        public DbSet<PedidoItem> PedidoItens { get; set; }
         public DbSet<Estado> Estados { get; set; }
         public DbSet<Cidade> Cidades { get; set; }
         public DbSet<Endereco> Enderecos { get; set; }
@@ -33,10 +34,6 @@ namespace KoridrawsPI.Data
                 .HasIndex(e => e.Sigla)
                 .IsUnique();
 
-            modelBuilder.Entity<Pedido>()
-                .HasMany(p => p.Itens)
-                .WithMany(i => i.Pedidos);
-
             modelBuilder.Entity<Cliente>()
                 .HasOne(c => c.ImagemPerfil)
                 .WithMany()
@@ -45,6 +42,10 @@ namespace KoridrawsPI.Data
 
             modelBuilder.Entity<Pedido>()
                 .Property(p => p.Status)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<Pedido>()
+                .Property(p => p.Pagamento)
                 .HasConversion<string>();
 
             modelBuilder.Entity<Item>()
@@ -68,6 +69,31 @@ namespace KoridrawsPI.Data
                 .HasMany(i => i.Imagens)
                 .WithOne(i => i.Item)
                 .HasForeignKey(i => i.ItemId);
+
+            modelBuilder.Entity<PedidoItem>()
+                .HasKey(pi => new { pi.PedidoId, pi.ItemId });
+
+            modelBuilder.Entity<PedidoItem>()
+                .HasOne(pi => pi.Pedido)
+                .WithMany(p => p.ItensPedido)
+                .HasForeignKey(pi => pi.PedidoId);
+
+            modelBuilder.Entity<PedidoItem>()
+                .HasOne(pi => pi.Item)
+                .WithMany(i => i.ItensPedido)
+                .HasForeignKey(pi => pi.ItemId);
+
+            modelBuilder.Entity<Item>()
+                .Property(i => i.Preco)
+                .HasColumnType("decimal(18,2)");
+
+            modelBuilder.Entity<Pedido>()
+                .Property(p => p.ValorTotal)
+                .HasColumnType("decimal(18,2)");
+
+            modelBuilder.Entity<PedidoItem>()
+                .Property(pi => pi.PrecoUnitario)
+                .HasColumnType("decimal(18,2)");
         }
     }
 }

@@ -8,7 +8,7 @@ namespace KoridrawsPI.Models.DTOs.Item
         public string Nome { get; set; } = string.Empty;
 
         [Required]
-        public double Preco { get; set; }
+        public decimal Preco { get; set; }
 
         public List<IFormFile> Imagens { get; set; } = new List<IFormFile>();
     }
