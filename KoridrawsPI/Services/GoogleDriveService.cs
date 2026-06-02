@@ -9,7 +9,7 @@ namespace KoridrawsPI.Services
     {
         private readonly string _credentialsPath = "client_secret.json";
         private readonly string _folderId = "1v6sGvy2gHUgqSuFBFXy6lLppahBXoHHr";
-        private readonly string[] Scopes = { DriveService.Scope.DriveFile };
+        private readonly string[] Scopes = { Google.Apis.Drive.v3.DriveService.Scope.Drive };
 
         private async Task<DriveService> ObterServicoAsync()
         {
