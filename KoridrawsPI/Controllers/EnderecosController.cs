@@ -39,7 +39,7 @@ namespace SuaLojaApi.Controllers
             return endereco;
         }
 
-        [Authorize(Roles = "Gerente")]
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult<Endereco>> PostEndereco([FromForm] EnderecoDto enderecoDto)
         {
@@ -59,7 +59,7 @@ namespace SuaLojaApi.Controllers
             return CreatedAtAction(nameof(GetEndereco), new { id = novoEndereco.Id }, novoEndereco);
         }
 
-        [Authorize(Roles = "Gerente")]
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutEndereco(int id, [FromForm] EnderecoDto enderecoDto)
         {
@@ -79,7 +79,7 @@ namespace SuaLojaApi.Controllers
             return NoContent();
         }
 
-        [Authorize(Roles = "Gerente")]
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEndereco(int id)
         {

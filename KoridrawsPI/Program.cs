@@ -31,6 +31,9 @@ builder.Services.AddSwaggerGen(c =>
     });
 
     c.OperationFilter<SecurityRequirementsOperationFilter>();
+
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Koridraws API", Version = "v1" });
+    c.OperationFilter<SuaLojaApi.Swagger.AdminKeyHeaderFilter>();
 });
 
 builder.Services.AddHttpContextAccessor();
