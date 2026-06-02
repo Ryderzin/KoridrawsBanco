@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using KoridrawsPI.Data;
+using KoridrawsPI.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using KoridrawsPI.Data;
 
 namespace KoridrawsPI.Controllers
 {
@@ -27,39 +28,36 @@ namespace KoridrawsPI.Controllers
                 return Unauthorized();
             }
 
-            var cliente = await _context.Clientes
-                .FirstOrDefaultAsync(c => c.Id == usuarioId);
+            // Buscamos na tabela base 'Usuarios' para pegar qualquer perfil (Cliente ou Gerente)
+            var usuario = await _context.Usuarios
+                .FirstOrDefaultAsync(u => u.Id == usuarioId);
 
-            if (cliente == null)
+            if (usuario == null)
             {
                 return NotFound();
             }
 
-            var enderecos = await _context.Enderecos
-                .Include(e => e.Cidade).ThenInclude(e => e.Estado)
-                .Where(e => e.ClienteId == usuarioId)
-                .ToListAsync();
-
-            var pedidos = await _context.Pedidos
-                .Include(p => p.Endereco)
-                .Include(p => p.ItensPedido)
-                    .ThenInclude(ip => ip.Item)
-                .Where(p => p.ClienteId == usuarioId)
-                .OrderByDescending(p => p.DataEmissao)
-                .ToListAsync();
-
-            return Ok(new
+            // Se for Cliente, buscamos os pedidos e endereços
+            if (usuario is Cliente)
             {
-                Perfil = new
-                {
-                    cliente.Id,
-                    cliente.Nome,
-                    cliente.Email,
-                    cliente.Papel
-                },
-                Enderecos = enderecos,
-                Pedidos = pedidos
-            });
+                var pedidos = await _context.Pedidos
+                    .Include(p => p.Endereco)
+                    .Include(p => p.ItensPedido)
+                        .ThenInclude(ip => ip.Item)
+                    .Where(p => p.ClienteId == usuarioId)
+                    .OrderByDescending(p => p.DataEmissao)
+                    .ToListAsync();
+
+                var enderecos = await _context.Enderecos
+                    .Include(e => e.Cidade)
+                    .Where(e => e.ClienteId == usuarioId)
+                    .ToListAsync();
+
+                return Ok(new { Perfil = usuario, Enderecos = enderecos, Pedidos = pedidos });
+            }
+
+            // Se for apenas Gerente, retornamos os dados do perfil
+            return Ok(new { Perfil = usuario });
         }
     }
 }
