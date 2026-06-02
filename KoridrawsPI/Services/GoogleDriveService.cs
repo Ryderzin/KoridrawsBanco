@@ -17,21 +17,20 @@ namespace KoridrawsPI.Services
 
             using (var stream = new FileStream(_credentialsPath, FileMode.Open, FileAccess.Read))
             {
-                string credPath = "token.json";
-                string writablePath = Path.Combine(Path.GetTempPath(), "token.json");
+                string sourceFolder = Path.Combine(Directory.GetCurrentDirectory(), "TokenStore");
+                string sourceFile = Path.Combine(sourceFolder, "Google.Apis.Auth.OAuth2.Responses.TokenResponse-user");
 
-                if (Directory.Exists(credPath))
+                string writableFolder = Path.Combine(Path.GetTempPath(), "GoogleTokenStore");
+                string writableFile = Path.Combine(writableFolder, "Google.Apis.Auth.OAuth2.Responses.TokenResponse-user");
+
+                if (!Directory.Exists(writableFolder))
                 {
-                    if (!Directory.Exists(writablePath))
-                    {
-                        Directory.CreateDirectory(writablePath);
-                    }
+                    Directory.CreateDirectory(writableFolder);
+                }
 
-                    foreach (var file in Directory.GetFiles(credPath))
-                    {
-                        var dest = Path.Combine(writablePath, Path.GetFileName(file));
-                        File.Copy(file, dest, true);
-                    }
+                if (File.Exists(sourceFile) && !File.Exists(writableFile))
+                {
+                    File.Copy(sourceFile, writableFile, true);
                 }
 
                 credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
@@ -39,7 +38,7 @@ namespace KoridrawsPI.Services
                     Scopes,
                     "user",
                     CancellationToken.None,
-                    new FileDataStore(writablePath, true));
+                    new FileDataStore(writableFolder, true));
             }
 
             return new DriveService(new BaseClientService.Initializer()
