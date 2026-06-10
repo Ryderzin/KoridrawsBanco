@@ -161,6 +161,27 @@ namespace KoridrawsPI.Controllers
             return NoContent();
         }
 
- 
+        [Authorize(Roles = "Gerente")]
+        [HttpPatch("{id}/estoque")]
+        public async Task<IActionResult> AtualizarEstoque(int id, [FromForm] int novoEstoque)
+        {
+            if (novoEstoque < 0)
+            {
+                return BadRequest(new { Mensagem = "O estoque não pode ser negativo." });
+            }
+
+            var item = await _context.Itens.FindAsync(id);
+
+            if (item == null)
+            {
+                return NotFound(new { Mensagem = "Item não encontrado." });
+            }
+
+            item.Estoque = novoEstoque;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { Mensagem = "Estoque atualizado com sucesso.", NovoEstoque = item.Estoque });
+        }
+
     }
 }

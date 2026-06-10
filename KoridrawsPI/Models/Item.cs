@@ -14,6 +14,8 @@ namespace KoridrawsPI.Models
 
         public decimal Preco { get; set; }
 
+        public int Estoque { get; set; }
+
         public int? GerenteId { get; set; }
 
         [ForeignKey("GerenteId")]

@@ -3,6 +3,7 @@ using System;
 using KoridrawsPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KoridrawsPI.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20260610022016_AdicionarEstoqueAoItem")]
+    partial class AdicionarEstoqueAoItem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,38 +24,6 @@ namespace KoridrawsPI.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("Frete", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("CodigoRastreio")
-                        .HasColumnType("text");
-
-                    b.Property<int>("PedidoId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("PrazoDias")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Servico")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<decimal>("Valor")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PedidoId")
-                        .IsUnique();
-
-                    b.ToTable("Fretes");
-                });
 
             modelBuilder.Entity("KoridrawsPI.Models.Abstract.Usuario", b =>
                 {
@@ -348,17 +319,6 @@ namespace KoridrawsPI.Migrations
                     b.ToTable("Gerentes", (string)null);
                 });
 
-            modelBuilder.Entity("Frete", b =>
-                {
-                    b.HasOne("KoridrawsPI.Models.Pedido", "Pedido")
-                        .WithOne("Frete")
-                        .HasForeignKey("Frete", "PedidoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Pedido");
-                });
-
             modelBuilder.Entity("KoridrawsPI.Models.Cidade", b =>
                 {
                     b.HasOne("KoridrawsPI.Models.Estado", "Estado")
@@ -517,8 +477,6 @@ namespace KoridrawsPI.Migrations
 
             modelBuilder.Entity("KoridrawsPI.Models.Pedido", b =>
                 {
-                    b.Navigation("Frete");
-
                     b.Navigation("ItensPedido");
                 });
 

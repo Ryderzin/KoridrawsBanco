@@ -44,17 +44,33 @@ namespace SuaLojaApi.Controllers
         [HttpPost("Post")]
         public async Task<ActionResult<Endereco>> PostEndereco([FromForm] EnderecoDto enderecoDto)
         {
-            var claimId = User.FindFirst("UsuarioId");
+            int? clienteIdFinal = null;
 
-            if (claimId == null)
+            if (User.IsInRole("Gerente"))
             {
-                var claimsDisponiveis = User.Claims.Select(c => new { c.Type, c.Value }).ToList();
-                return StatusCode(401, new { Erro = "ID não encontrado no token.", Claims = claimsDisponiveis });
+                // Se o gerente enviou um ID, validamos se esse cliente existe.
+                // Se ele não enviar nada, o clienteIdFinal simplesmente continua nulo.
+                if (enderecoDto.ClienteId.HasValue && enderecoDto.ClienteId > 0)
+                {
+                    var clienteExiste = await _context.Clientes.AnyAsync(c => c.Id == enderecoDto.ClienteId);
+                    if (!clienteExiste)
+                    {
+                        return NotFound("Cliente não encontrado no sistema.");
+                    }
+
+                    clienteIdFinal = enderecoDto.ClienteId.Value;
+                }
             }
-
-            if (!int.TryParse(claimId.Value, out int clienteId))
+            else
             {
-                return BadRequest(new { Erro = "ID inválido no token.", Valor = claimId.Value });
+                // Se for o próprio Cliente acessando, extraímos o ID dele do Token e forçamos o vínculo.
+                var claimId = User.FindFirst("UsuarioId");
+                if (claimId == null || !int.TryParse(claimId.Value, out int clienteId))
+                {
+                    return Unauthorized();
+                }
+
+                clienteIdFinal = clienteId;
             }
 
             var novoEndereco = new Endereco
@@ -65,7 +81,7 @@ namespace SuaLojaApi.Controllers
                 Cep = enderecoDto.Cep,
                 Complemento = enderecoDto.Complemento,
                 CidadeId = enderecoDto.CidadeId,
-                ClienteId = clienteId
+                ClienteId = clienteIdFinal
             };
 
             _context.Enderecos.Add(novoEndereco);

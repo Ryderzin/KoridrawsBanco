@@ -18,6 +18,8 @@ namespace KoridrawsPI.Models
 
         [Required]
         public int CidadeId { get; set; }
+
+        public int? ClienteId { get; set; }
     }
 
 }

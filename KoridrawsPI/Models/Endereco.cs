@@ -16,8 +16,6 @@ namespace KoridrawsPI.Models
         public Cidade? Cidade { get; set; }
 
         public int? ClienteId { get; set; }
-
-        [JsonIgnore]
         public Cliente? Cliente { get; set; }
 
 

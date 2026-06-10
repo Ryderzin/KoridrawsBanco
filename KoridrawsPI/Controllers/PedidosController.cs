@@ -73,7 +73,7 @@ namespace KoridrawsPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Pedido>> PostPedido([FromForm] PedidoCriacaoDto dto)
+        public async Task<ActionResult<Pedido>> PostPedido([FromBody] PedidoCriacaoDto dto)
         {
             var claimId = User.FindFirst("UsuarioId");
             if (claimId == null || !int.TryParse(claimId.Value, out int clienteId))
@@ -88,6 +88,8 @@ namespace KoridrawsPI.Controllers
 
             if (dto.Itens == null || !dto.Itens.Any()) return BadRequest("O pedido deve conter itens.");
 
+            if (dto.Frete == null) return BadRequest("É necessário selecionar uma opção de frete.");
+
             var pedido = new Pedido
             {
                 ClienteId = clienteId,
@@ -95,10 +97,16 @@ namespace KoridrawsPI.Controllers
                 Status = StatusPedido.Criado,
                 Pagamento = dto.Pagamento,
                 DataEmissao = DateTime.UtcNow,
-                ItensPedido = new List<PedidoItem>()
+                ItensPedido = new List<PedidoItem>(),
+                Frete = new Frete
+                {
+                    Servico = dto.Frete.Servico,
+                    Valor = dto.Frete.Valor,
+                    PrazoDias = dto.Frete.PrazoDias
+                }
             };
 
-            decimal valorTotal = 0;
+            decimal valorTotalItens = 0;
 
             foreach (var itemDto in dto.Itens)
             {
@@ -107,6 +115,13 @@ namespace KoridrawsPI.Controllers
                 var itemBanco = await _context.Itens.FindAsync(itemDto.ItemId);
                 if (itemBanco == null) return BadRequest($"Item com ID {itemDto.ItemId} não encontrado.");
 
+                if (itemBanco.Estoque < itemDto.Quantidade)
+                {
+                    return BadRequest($"Estoque insuficiente para o item {itemBanco.Nome}. Disponível: {itemBanco.Estoque}.");
+                }
+
+                itemBanco.Estoque -= itemDto.Quantidade;
+
                 var pedidoItem = new PedidoItem
                 {
                     ItemId = itemBanco.Id,
@@ -114,11 +129,11 @@ namespace KoridrawsPI.Controllers
                     PrecoUnitario = itemBanco.Preco
                 };
 
-                valorTotal += pedidoItem.Quantidade * pedidoItem.PrecoUnitario;
+                valorTotalItens += pedidoItem.Quantidade * pedidoItem.PrecoUnitario;
                 pedido.ItensPedido.Add(pedidoItem);
             }
 
-            pedido.ValorTotal = valorTotal;
+            pedido.ValorTotal = valorTotalItens + dto.Frete.Valor;
 
             _context.Pedidos.Add(pedido);
             await _context.SaveChangesAsync();
@@ -127,7 +142,7 @@ namespace KoridrawsPI.Controllers
         }
 
         [Authorize(Roles = "Gerente")]
-        [HttpPatch("{id}/status")]
+        [HttpPatch("status")]
         public async Task<IActionResult> AtualizarStatus([FromForm] int id, [FromForm] StatusPedido novoStatus)
         {
             var pedido = await _context.Pedidos.FindAsync(id);

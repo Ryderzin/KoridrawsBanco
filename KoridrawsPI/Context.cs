@@ -21,6 +21,7 @@ namespace KoridrawsPI.Data
         public DbSet<Endereco> Enderecos { get; set; }
         public DbSet<Imagem> Imagens { get; set; }
         public DbSet<Evento> Eventos { get; set; }
+        public DbSet<Frete> Fretes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -93,6 +94,15 @@ namespace KoridrawsPI.Data
 
             modelBuilder.Entity<PedidoItem>()
                 .Property(pi => pi.PrecoUnitario)
+                .HasColumnType("decimal(18,2)");
+
+            modelBuilder.Entity<Frete>()
+                .HasOne(f => f.Pedido)
+                .WithOne(p => p.Frete)
+                .HasForeignKey<Frete>(f => f.PedidoId);
+
+            modelBuilder.Entity<Frete>()
+                .Property(f => f.Valor)
                 .HasColumnType("decimal(18,2)");
         }
     }

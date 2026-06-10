@@ -17,7 +17,10 @@ builder.Services.AddDbContext<KoridrawsPI.Data.Context>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+}); 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -35,6 +38,8 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Koridraws API", Version = "v1" });
     c.OperationFilter<SuaLojaApi.Swagger.AdminKeyHeaderFilter>();
 });
+
+builder.Services.AddHttpClient();
 
 builder.Services.AddHttpContextAccessor();
 var secretKey = builder.Configuration["JWT:Secret"] ?? throw new ArgumentNullException("JWT Secret is missing");

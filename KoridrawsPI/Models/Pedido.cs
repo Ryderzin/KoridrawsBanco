@@ -14,6 +14,7 @@ namespace KoridrawsPI.Models
         public decimal ValorTotal { get; set; }
         public StatusPedido Status { get; set; } = StatusPedido.Criado;
         public MetodoPagamento Pagamento { get; set; }
+        public Frete? Frete { get; set; }
     }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
