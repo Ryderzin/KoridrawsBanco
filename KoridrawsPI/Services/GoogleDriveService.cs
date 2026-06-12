@@ -1,7 +1,7 @@
 ﻿using Google.Apis.Auth.OAuth2;
 using Google.Apis.Drive.v3;
 using Google.Apis.Services;
-using System.Text.Json;
+using System.Text;
 
 namespace KoridrawsPI.Services
 {
@@ -12,28 +12,18 @@ namespace KoridrawsPI.Services
 
         public GoogleDriveService(IConfiguration configuration)
         {
-            string jsonCredenciais = configuration["GoogleDrive:CredentialsJson"] ?? string.Empty;
+            string base64Credenciais = configuration["GoogleDrive:CredentialsBase64"] ?? string.Empty;
 
-            if (string.IsNullOrWhiteSpace(jsonCredenciais))
+            if (string.IsNullOrWhiteSpace(base64Credenciais))
             {
-                throw new Exception("As credenciais nao foram encontradas nas variaveis de ambiente.");
+                throw new Exception("As credenciais não foram encontradas.");
             }
 
-            var dados = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonCredenciais);
+            byte[] bytes = Convert.FromBase64String(base64Credenciais);
+            string jsonCredenciais = Encoding.UTF8.GetString(bytes);
 
-            if (dados == null || !dados.ContainsKey("private_key") || !dados.ContainsKey("client_email"))
-            {
-                throw new Exception("Chaves obrigatorias ausentes no JSON de credenciais.");
-            }
-
-            string privateKey = dados["private_key"].Replace("\\n", "\n");
-            string clientEmail = dados["client_email"];
-
-            var credential = new ServiceAccountCredential(
-                new ServiceAccountCredential.Initializer(clientEmail)
-                {
-                    Scopes = new[] { DriveService.ScopeConstants.Drive }
-                }.FromPrivateKey(privateKey));
+            var credential = GoogleCredential.FromJson(jsonCredenciais)
+                .CreateScoped(new[] { DriveService.ScopeConstants.Drive });
 
             _service = new DriveService(new BaseClientService.Initializer()
             {
