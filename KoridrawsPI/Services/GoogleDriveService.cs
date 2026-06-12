@@ -48,6 +48,7 @@ namespace KoridrawsPI.Services
                 memoryStream.Position = 0;
 
                 request = _service.Files.Create(fileMetadata, memoryStream, arquivo.ContentType);
+                request.SupportsAllDrives = true;
                 request.Fields = "id, webViewLink";
 
                 var progresso = await request.UploadAsync();
