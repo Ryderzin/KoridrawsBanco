@@ -6,21 +6,20 @@ namespace KoridrawsPI.Services
 {
     public class GoogleDriveService
     {
-        private readonly string _credentialsPath = "client_secret.json";
+        private readonly DriveService _service;
         private readonly string _folderId = "1v6sGvy2gHUgqSuFBFXy6lLppahBXoHHr";
-        private readonly string[] Scopes = { DriveService.ScopeConstants.Drive};
 
-        private DriveService ObterServico()
+        public GoogleDriveService()
         {
             GoogleCredential credential;
 
-            using (var stream = new FileStream(_credentialsPath, FileMode.Open, FileAccess.Read))
+            using (var stream = new FileStream("client_secret.json", FileMode.Open, FileAccess.Read))
             {
                 credential = GoogleCredential.FromStream(stream)
-                                             .CreateScoped(Scopes);
+                    .CreateScoped(new[] { DriveService.ScopeConstants.Drive });
             }
 
-            return new DriveService(new BaseClientService.Initializer()
+            _service = new DriveService(new BaseClientService.Initializer()
             {
                 HttpClientInitializer = credential,
                 ApplicationName = "SuaLojaApi"
@@ -29,8 +28,6 @@ namespace KoridrawsPI.Services
 
         public async Task<(string Url, string CaminhoCloud)> UploadImagemAsync(IFormFile arquivo)
         {
-            var service = ObterServico();
-
             var fileMetadata = new Google.Apis.Drive.v3.Data.File()
             {
                 Name = arquivo.FileName,
@@ -44,7 +41,7 @@ namespace KoridrawsPI.Services
                 await arquivo.CopyToAsync(memoryStream);
                 memoryStream.Position = 0;
 
-                request = service.Files.Create(fileMetadata, memoryStream, arquivo.ContentType);
+                request = _service.Files.Create(fileMetadata, memoryStream, arquivo.ContentType);
                 request.Fields = "id, webViewLink";
 
                 var progresso = await request.UploadAsync();
@@ -67,11 +64,9 @@ namespace KoridrawsPI.Services
 
         public async Task ExcluirImagemAsync(string fileId)
         {
-            var service = ObterServico();
-
             try
             {
-                await service.Files.Delete(fileId).ExecuteAsync();
+                await _service.Files.Delete(fileId).ExecuteAsync();
             }
             catch (Exception ex)
             {

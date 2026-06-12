@@ -39,6 +39,8 @@ builder.Services.AddSwaggerGen(c =>
     c.OperationFilter<SuaLojaApi.Swagger.AdminKeyHeaderFilter>();
 });
 
+builder.Services.AddSingleton<GoogleDriveService>();
+
 builder.Services.AddHttpClient();
 
 builder.Services.AddHttpContextAccessor();
