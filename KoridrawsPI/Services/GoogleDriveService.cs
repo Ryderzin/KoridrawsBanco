@@ -11,15 +11,15 @@ namespace KoridrawsPI.Services
 
         public GoogleDriveService(IConfiguration configuration)
         {
-            // Lê o JSON inteiro da variável de ambiente
-            string jsonCredenciais = configuration["GoogleDrive:CredentialsJson"];
+            string jsonCredenciais = configuration["GoogleDrive:CredentialsJson"] ?? string.Empty;
 
             if (string.IsNullOrWhiteSpace(jsonCredenciais))
             {
-                throw new Exception("As credenciais do Google Drive não foram encontradas nas variáveis de ambiente.");
+                throw new Exception("As credenciais não foram encontradas nas variáveis de ambiente.");
             }
 
-            // Injeta o JSON diretamente, ignorando arquivos físicos
+            jsonCredenciais = jsonCredenciais.Replace("\\n", "\n");
+
             var credential = GoogleCredential.FromJson(jsonCredenciais)
                 .CreateScoped(new[] { DriveService.ScopeConstants.Drive });
 
@@ -68,14 +68,7 @@ namespace KoridrawsPI.Services
 
         public async Task ExcluirImagemAsync(string fileId)
         {
-            try
-            {
-                await _service.Files.Delete(fileId).ExecuteAsync();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
+            await _service.Files.Delete(fileId).ExecuteAsync();
         }
     }
 }
