@@ -68,7 +68,7 @@ builder.Services.AddScoped<GoogleDriveService>();
 
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
+    options.AddPolicy("AllowAll", policy =>
     {
         policy.AllowAnyOrigin()   // This enables "*"
               .AllowAnyHeader()
@@ -100,7 +100,7 @@ using (var scope = app.Services.CreateScope())
 
 }
 
-app.UseCors();
+app.UseCors("AllowAll");
 
 
 
