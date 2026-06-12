@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace KoridrawsPI.Models.DTOs
+namespace KoridrawsPI.Models.DTOs.Pedido
 {
     public class PedidoCriacaoDto
     {

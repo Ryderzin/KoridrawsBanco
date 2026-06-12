@@ -1,6 +1,6 @@
 ﻿using KoridrawsPI.Data;
 using KoridrawsPI.Models;
-using KoridrawsPI.Models;
+using KoridrawsPI.Models.DTOs.Endereco;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

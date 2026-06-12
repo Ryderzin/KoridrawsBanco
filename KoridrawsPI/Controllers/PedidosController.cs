@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KoridrawsPI.Data;
 using KoridrawsPI.Models;
-using KoridrawsPI.Models.DTOs;
+using KoridrawsPI.Models.DTOs.Pedido;
 
 namespace KoridrawsPI.Controllers
 {
@@ -19,31 +19,50 @@ namespace KoridrawsPI.Controllers
             _context = context;
         }
 
+        [Authorize(Roles = "Gerente")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Pedido>>> GetPedidos()
         {
-            if (User.IsInRole("Gerente"))
-            {
-                return await _context.Pedidos
-                    .Include(p => p.Cliente)
-                    .Include(p => p.Endereco)
-                    .Include(p => p.ItensPedido)
-                        .ThenInclude(ip => ip.Item)
-                    .ToListAsync();
-            }
+            var pedidos = await _context.Pedidos
+                   .Include(p => p.Cliente)
+                   .Include(p => p.Frete)
+                   .Include(p => p.ItensPedido)
+                   .ThenInclude(ip => ip.Item)
+                   .Include(p => p.Endereco)
+                       .ThenInclude(e => e!.Cidade).ThenInclude(c => c.Estado)
+                   .OrderByDescending(p => p.DataEmissao)
+                   .ToListAsync();
 
-            var claimId = User.FindFirst("UsuarioId");
-            if (claimId == null || !int.TryParse(claimId.Value, out int clienteId))
+            var resultado = pedidos.Select(p => new GetPedidosDto
             {
-                return Unauthorized();
+                Id = p.Id,
+                DataEmissao = p.DataEmissao,
+                ClienteNome = p.Cliente != null ? p.Cliente.Nome : "Removido",
+                ClienteEmail = p.Cliente != null ? p.Cliente.Email : string.Empty,
+                ValorTotal = p.ValorTotal,
+                Status = p.Status.ToString(),
+                Pagamento = p.Pagamento.ToString(),
+                FreteServico = p.Frete != null ? p.Frete.Servico : "Não definido",
+                FreteValor = p.Frete != null ? p.Frete.Valor : 0,
+                CodigoRastreio = p.Frete?.CodigoRastreio,
+                TotalItens = p.ItensPedido.Sum(i => i.Quantidade),
+                EnderecoCompleto = p.Endereco != null
+                    ? $"{p.Endereco.Rua}, {p.Endereco.Numero}" +
+                      (string.IsNullOrWhiteSpace(p.Endereco.Complemento) ? "" : $" - {p.Endereco.Complemento}") +
+                      $" - {p.Endereco.Bairro}, CEP: {p.Endereco.Cep} - " +
+                      (p.Endereco.Cidade != null ? p.Endereco.Cidade.Descricao + " | " + p.Endereco.Cidade.Estado.Descricao : "Cidade desconhecida")
+                    : "Endereço não informado",
+                Itens = p.ItensPedido.Select(ip => new GetPedidosDto.PedidoItensDto
+                {
+                    ItemId = ip.ItemId,
+                    NomeProduto = ip.Item != null ? ip.Item.Nome : "Produto indisponível",
+                    Quantidade = ip.Quantidade,
+                    PrecoUnitario = ip.PrecoUnitario
+                }).ToList()
             }
+            ).ToList();
 
-            return await _context.Pedidos
-                .Include(p => p.Endereco)
-                .Include(p => p.ItensPedido)
-                    .ThenInclude(ip => ip.Item)
-                .Where(p => p.ClienteId == clienteId)
-                .ToListAsync();
+            return Ok(resultado);
         }
 
         [HttpGet("{id}")]
@@ -94,7 +113,7 @@ namespace KoridrawsPI.Controllers
             {
                 ClienteId = clienteId,
                 EnderecoId = dto.EnderecoId,
-                Status = StatusPedido.Criado,
+                Status = StatusPedido.AguardandoPagamento,
                 Pagamento = dto.Pagamento,
                 DataEmissao = DateTime.UtcNow,
                 ItensPedido = new List<PedidoItem>(),

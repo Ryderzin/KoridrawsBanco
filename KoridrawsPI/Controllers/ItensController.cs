@@ -34,7 +34,7 @@ namespace KoridrawsPI.Controllers
         // GET: api/Itens/5
         // Rota PÚBLICA
         [Authorize(Roles = "Gerente")]
-        [HttpPost]
+        [HttpPost("Post")]
         public async Task<ActionResult<Item>> PostItem([FromForm] ItemUploadDto itemDto)
         {
             var claimsIdentity = User.Identity as ClaimsIdentity;
@@ -44,8 +44,8 @@ namespace KoridrawsPI.Controllers
             {
                 Nome = itemDto.Nome,
                 Preco = itemDto.Preco,
-                GerenteId = gerenteIdClaim != null ? int.Parse(gerenteIdClaim) : null,
-                Imagens = new List<Imagem>()
+                Imagens = new List<Imagem>(),
+                Estoque = itemDto.Estoque
             };
 
             if (itemDto.Imagens != null && itemDto.Imagens.Any())
@@ -87,7 +87,7 @@ namespace KoridrawsPI.Controllers
         }
 
         [Authorize(Roles = "Gerente")]
-        [HttpPut("{id}")]
+        [HttpPut("Put/{id}")]
         public async Task<IActionResult> PutItem(int id, [FromForm] ItemUpdateDto itemDto)
         {
             var item = await _context.Itens
@@ -138,7 +138,7 @@ namespace KoridrawsPI.Controllers
         }
 
         [Authorize(Roles = "Gerente")]
-        [HttpDelete("{id}")]
+        [HttpDelete("Delete/{id}")]
         public async Task<IActionResult> DeleteItem(int id)
         {
             var item = await _context.Itens

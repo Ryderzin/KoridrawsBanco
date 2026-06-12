@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace KoridrawsPI.Models
+namespace KoridrawsPI.Models.DTOs.Endereco
 {
     public class EnderecoDto
     {

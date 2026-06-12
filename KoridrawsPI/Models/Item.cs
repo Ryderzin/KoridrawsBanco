@@ -16,11 +16,6 @@ namespace KoridrawsPI.Models
 
         public int Estoque { get; set; }
 
-        public int? GerenteId { get; set; }
-
-        [ForeignKey("GerenteId")]
-        public Gerente? Gerente { get; set; }
-
         [JsonIgnore]
         public ICollection<PedidoItem> ItensPedido { get; set; } = new List<PedidoItem>();
 

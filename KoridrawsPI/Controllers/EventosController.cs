@@ -1,11 +1,14 @@
 ﻿using KoridrawsPI.Data;
+using KoridrawsPI.Data;
 using KoridrawsPI.Models;
+using KoridrawsPI.Models.DTOs.Endereco;
+using KoridrawsPI.Models.DTOs.Evento;
+using KoridrawsPI.Models.DTOs.ImagemDtos;
+using KoridrawsPI.Services;
 using KoridrawsPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using KoridrawsPI.Data;
-using KoridrawsPI.Services;
 using System.Security.Claims;
 
 namespace KoridrawsPI.Controllers
@@ -24,17 +27,77 @@ namespace KoridrawsPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Evento>>> GetEventos()
+        public async Task<ActionResult<IEnumerable<GetEventosDto>>> GetEventos()
         {
-            return await _context.Eventos
+            var eventos = await _context.Eventos
                 .Include(e => e.Endereco)
-                    .ThenInclude(ed => ed!.Cidade)
+                    .ThenInclude(ed => ed!.Cidade).ThenInclude(cid => cid.Estado)
                 .Include(e => e.Imagens)
                 .ToListAsync();
+
+            var resultado = eventos.Select(e => new GetEventosDto
+            {
+                Id = e.Id,
+                Nome = e.Nome,
+                Descricao = e.Descricao,
+                Data = e.Data,
+                EnderecoId = e.EnderecoId,
+                Endereco = e.Endereco != null ? new EnderecoEventoDto
+                {
+                    Id = e.Endereco.Id,
+                    Rua = e.Endereco.Rua,
+                    Numero = e.Endereco.Numero,
+                    Bairro = e.Endereco.Bairro,
+                    Cep = e.Endereco.Cep,
+                    Complemento = e.Endereco.Complemento,
+                    CidadeNome = e.Endereco.Cidade != null ? e.Endereco.Cidade.Descricao + " | " + e.Endereco.Cidade.Estado.Sigla : string.Empty
+                } : null,
+                Imagem = e.Imagens.FirstOrDefault() != null ? new Models.DTOs.ImagemDtos.ImagemRelationDto 
+                { CaminhoCloud = e.Imagens.FirstOrDefault().CaminhoCloud, Url = e.Imagens.FirstOrDefault().Url, Id = e.Imagens.FirstOrDefault().Id  } : null,
+            }).ToList();
+
+            return Ok(resultado);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<GetEventoDto>> GetEvento(int id)
+        {
+            var evento = await _context.Eventos
+                .Include(e => e.Endereco)
+                    .ThenInclude(ed => ed!.Cidade).ThenInclude(cid => cid.Estado)
+                .Include(e => e.Imagens)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (evento == null)
+            {
+                return NotFound();
+            }
+
+            var dto = new GetEventoDto
+            {
+                Id = evento.Id,
+                Nome = evento.Nome,
+                Descricao = evento.Descricao,
+                Data = evento.Data,
+                EnderecoId = evento.EnderecoId,
+                Endereco = evento.Endereco != null ? new EnderecoEventoDto
+                {
+                    Id = evento.Endereco.Id,
+                    Rua = evento.Endereco.Rua,
+                    Numero = evento.Endereco.Numero,
+                    Bairro = evento.Endereco.Bairro,
+                    Cep = evento.Endereco.Cep,
+                    Complemento = evento.Endereco.Complemento,
+                    CidadeNome = evento.Endereco.Cidade != null ? evento.Endereco.Cidade.Descricao + " | " + evento.Endereco.Cidade.Estado.Sigla : string.Empty
+                } : null,
+                Imagens = evento.Imagens.Select(i => new ImagemRelationDto { CaminhoCloud = i.CaminhoCloud, Id = i.Id, Url = i.Url }).ToList(),
+            };
+
+            return Ok(dto);
         }
 
         [Authorize(Roles = "Gerente")]
-        [HttpPost]
+        [HttpPost("Post")]
         public async Task<ActionResult<Evento>> PostEvento([FromForm] EventoUploadDto eventoDto)
         {
             var claimsIdentity = User.Identity as ClaimsIdentity;
@@ -46,7 +109,6 @@ namespace KoridrawsPI.Controllers
                 Descricao = eventoDto.Descricao,
                 Data = eventoDto.Data,
                 EnderecoId = eventoDto.EnderecoId,
-                GerenteId = gerenteIdClaim != null ? int.Parse(gerenteIdClaim) : null,
                 Imagens = new List<Imagem>()
             };
 
@@ -74,7 +136,7 @@ namespace KoridrawsPI.Controllers
         }
 
         [Authorize(Roles = "Gerente")]
-        [HttpPut("{id}")]
+        [HttpPut("Put/{id}")]
         public async Task<IActionResult> PutEvento(int id, [FromForm] EventoUpdateDto eventoDto)
         {
             var evento = await _context.Eventos
@@ -127,7 +189,7 @@ namespace KoridrawsPI.Controllers
         }
 
         [Authorize(Roles = "Gerente")]
-        [HttpDelete("{id}")]
+        [HttpDelete("Delete/{id}")]
         public async Task<IActionResult> DeleteEvento(int id)
         {
             var evento = await _context.Eventos

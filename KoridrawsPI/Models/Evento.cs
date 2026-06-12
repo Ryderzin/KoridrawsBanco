@@ -19,11 +19,6 @@ namespace KoridrawsPI.Models
         [ForeignKey("EnderecoId")]
         public Endereco? Endereco { get; set; }
 
-        public int? GerenteId { get; set; }
-
-        [ForeignKey("GerenteId")]
-        public Gerente? Gerente { get; set; }
-
         public ICollection<Imagem> Imagens { get; set; } = new List<Imagem>();
     }
 }

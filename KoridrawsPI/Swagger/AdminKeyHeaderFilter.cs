@@ -14,7 +14,7 @@ namespace SuaLojaApi.Swagger
 
             operation.Parameters.Add(new OpenApiParameter
             {
-                Name = "X-Admin-Key",
+                Name = "dmin-Key",
                 In = ParameterLocation.Header,
                 Required = false,
                 Schema = new OpenApiSchema

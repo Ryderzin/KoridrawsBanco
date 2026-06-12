@@ -49,18 +49,6 @@ namespace KoridrawsPI.Data
                 .Property(p => p.Pagamento)
                 .HasConversion<string>();
 
-            modelBuilder.Entity<Item>()
-                .HasOne(i => i.Gerente)
-                .WithMany()
-                .HasForeignKey(i => i.GerenteId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            modelBuilder.Entity<Evento>()
-                .HasOne(e => e.Gerente)
-                .WithMany()
-                .HasForeignKey(e => e.GerenteId)
-                .OnDelete(DeleteBehavior.SetNull);
-
             modelBuilder.Entity<Evento>()
                 .HasMany(e => e.Imagens)
                 .WithOne(i => i.Evento)

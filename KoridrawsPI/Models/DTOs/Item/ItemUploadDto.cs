@@ -11,5 +11,7 @@ namespace KoridrawsPI.Models.DTOs.Item
         public decimal Preco { get; set; }
 
         public List<IFormFile> Imagens { get; set; } = new List<IFormFile>();
+
+        public int Estoque { get; set; } = 0;
     }
 }

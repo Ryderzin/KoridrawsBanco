@@ -17,5 +17,8 @@ namespace KoridrawsPI.Models.Abstract
 
         [Required]
         public string Papel { get; set; } = string.Empty; // "Cliente" ou "Gerente"
+
+        public string? ResetSenhaToken { get; set; }
+        public DateTime? ResetSenhaExpiracao { get; set; }
     }
 }

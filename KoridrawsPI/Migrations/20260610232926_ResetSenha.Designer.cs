@@ -3,6 +3,7 @@ using System;
 using KoridrawsPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KoridrawsPI.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20260610232926_ResetSenha")]
+    partial class ResetSenha
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -195,6 +198,9 @@ namespace KoridrawsPI.Migrations
                     b.Property<int>("EnderecoId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("GerenteId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Nome")
                         .IsRequired()
                         .HasColumnType("text");
@@ -202,6 +208,8 @@ namespace KoridrawsPI.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("EnderecoId");
+
+                    b.HasIndex("GerenteId");
 
                     b.ToTable("Eventos");
                 });
@@ -247,6 +255,9 @@ namespace KoridrawsPI.Migrations
                     b.Property<int>("Estoque")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("GerenteId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Nome")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -256,6 +267,8 @@ namespace KoridrawsPI.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("GerenteId");
 
                     b.ToTable("Itens");
                 });
@@ -391,7 +404,14 @@ namespace KoridrawsPI.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("KoridrawsPI.Models.Gerente", "Gerente")
+                        .WithMany()
+                        .HasForeignKey("GerenteId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Endereco");
+
+                    b.Navigation("Gerente");
                 });
 
             modelBuilder.Entity("KoridrawsPI.Models.Imagem", b =>
@@ -407,6 +427,16 @@ namespace KoridrawsPI.Migrations
                     b.Navigation("Evento");
 
                     b.Navigation("Item");
+                });
+
+            modelBuilder.Entity("KoridrawsPI.Models.Item", b =>
+                {
+                    b.HasOne("KoridrawsPI.Models.Gerente", "Gerente")
+                        .WithMany()
+                        .HasForeignKey("GerenteId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Gerente");
                 });
 
             modelBuilder.Entity("KoridrawsPI.Models.Pedido", b =>
