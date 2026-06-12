@@ -9,15 +9,19 @@ namespace KoridrawsPI.Services
         private readonly DriveService _service;
         private readonly string _folderId = "1v6sGvy2gHUgqSuFBFXy6lLppahBXoHHr";
 
-        public GoogleDriveService()
+        public GoogleDriveService(IConfiguration configuration)
         {
-            GoogleCredential credential;
+            // Lê o JSON inteiro da variável de ambiente
+            string jsonCredenciais = configuration["GoogleDrive:CredentialsJson"];
 
-            using (var stream = new FileStream("client_secret.json", FileMode.Open, FileAccess.Read))
+            if (string.IsNullOrWhiteSpace(jsonCredenciais))
             {
-                credential = GoogleCredential.FromStream(stream)
-                    .CreateScoped(new[] { DriveService.ScopeConstants.Drive });
+                throw new Exception("As credenciais do Google Drive não foram encontradas nas variáveis de ambiente.");
             }
+
+            // Injeta o JSON diretamente, ignorando arquivos físicos
+            var credential = GoogleCredential.FromJson(jsonCredenciais)
+                .CreateScoped(new[] { DriveService.ScopeConstants.Drive });
 
             _service = new DriveService(new BaseClientService.Initializer()
             {
