@@ -1,7 +1,6 @@
 ﻿using Google.Apis.Auth.OAuth2;
 using Google.Apis.Drive.v3;
 using Google.Apis.Services;
-using Google.Apis.Util.Store;
 
 namespace KoridrawsPI.Services
 {
@@ -9,36 +8,16 @@ namespace KoridrawsPI.Services
     {
         private readonly string _credentialsPath = "client_secret.json";
         private readonly string _folderId = "1v6sGvy2gHUgqSuFBFXy6lLppahBXoHHr";
-        private readonly string[] Scopes = { Google.Apis.Drive.v3.DriveService.Scope.Drive };
+        private readonly string[] Scopes = { DriveService.ScopeConstants.DriveFile };
 
-        private async Task<DriveService> ObterServicoAsync()
+        private DriveService ObterServico()
         {
-            UserCredential credential;
+            GoogleCredential credential;
 
             using (var stream = new FileStream(_credentialsPath, FileMode.Open, FileAccess.Read))
             {
-                string sourceFolder = Path.Combine(Directory.GetCurrentDirectory(), "TokenStore");
-                string sourceFile = Path.Combine(sourceFolder, "Google.Apis.Auth.OAuth2.Responses.TokenResponse-user");
-
-                string writableFolder = Path.Combine(Path.GetTempPath(), "GoogleTokenStore");
-                string writableFile = Path.Combine(writableFolder, "Google.Apis.Auth.OAuth2.Responses.TokenResponse-user");
-
-                if (!Directory.Exists(writableFolder))
-                {
-                    Directory.CreateDirectory(writableFolder);
-                }
-
-                if (File.Exists(sourceFile) && !File.Exists(writableFile))
-                {
-                    File.Copy(sourceFile, writableFile, true);
-                }
-
-                credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
-                    GoogleClientSecrets.FromStream(stream).Secrets,
-                    Scopes,
-                    "user",
-                    CancellationToken.None,
-                    new FileDataStore(writableFolder, true));
+                credential = GoogleCredential.FromStream(stream)
+                                             .CreateScoped(Scopes);
             }
 
             return new DriveService(new BaseClientService.Initializer()
@@ -50,7 +29,7 @@ namespace KoridrawsPI.Services
 
         public async Task<(string Url, string CaminhoCloud)> UploadImagemAsync(IFormFile arquivo)
         {
-            var service = await ObterServicoAsync();
+            var service = ObterServico();
 
             var fileMetadata = new Google.Apis.Drive.v3.Data.File()
             {
@@ -80,7 +59,7 @@ namespace KoridrawsPI.Services
 
             if (file == null)
             {
-                throw new Exception("Upload falhou e o ResponseBody retornou null.");
+                throw new Exception("Upload falhou.");
             }
 
             return (file.WebViewLink, file.Id);
@@ -88,7 +67,7 @@ namespace KoridrawsPI.Services
 
         public async Task ExcluirImagemAsync(string fileId)
         {
-            var service = await ObterServicoAsync();
+            var service = ObterServico();
 
             try
             {
