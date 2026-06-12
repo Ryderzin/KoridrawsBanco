@@ -1,6 +1,7 @@
 ﻿using Google.Apis.Auth.OAuth2;
 using Google.Apis.Drive.v3;
 using Google.Apis.Services;
+using System.Text.Json;
 
 namespace KoridrawsPI.Services
 {
@@ -15,18 +16,29 @@ namespace KoridrawsPI.Services
 
             if (string.IsNullOrWhiteSpace(jsonCredenciais))
             {
-                throw new Exception("As credenciais não foram encontradas nas variáveis de ambiente.");
+                throw new Exception("As credenciais nao foram encontradas nas variaveis de ambiente.");
             }
 
-            jsonCredenciais = jsonCredenciais.Replace("\\n", "\n");
+            var dados = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonCredenciais);
 
-            var credential = GoogleCredential.FromJson(jsonCredenciais)
-                .CreateScoped(new[] { DriveService.ScopeConstants.Drive });
+            if (dados == null || !dados.ContainsKey("private_key") || !dados.ContainsKey("client_email"))
+            {
+                throw new Exception("Chaves obrigatorias ausentes no JSON de credenciais.");
+            }
+
+            string privateKey = dados["private_key"].Replace("\\n", "\n");
+            string clientEmail = dados["client_email"];
+
+            var credential = new ServiceAccountCredential(
+                new ServiceAccountCredential.Initializer(clientEmail)
+                {
+                    Scopes = new[] { DriveService.ScopeConstants.Drive }
+                }.FromPrivateKey(privateKey));
 
             _service = new DriveService(new BaseClientService.Initializer()
             {
                 HttpClientInitializer = credential,
-                ApplicationName = "SuaLojaApi"
+                ApplicationName = "KoridrawsPI"
             });
         }
 
