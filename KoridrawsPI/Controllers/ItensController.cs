@@ -1,5 +1,6 @@
 ﻿using KoridrawsPI.Data;
 using KoridrawsPI.Models;
+using KoridrawsPI.Models.DTOs.ImagemDtos;
 using KoridrawsPI.Models.DTOs.Item;
 using KoridrawsPI.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -22,17 +23,30 @@ namespace KoridrawsPI.Controllers
             _driveService = driveService;
         }
 
-        // GET: api/Itens
-        // Rota PÚBLICA: Não tem [Authorize], então qualquer um acessa
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Item>>> GetItens()
+        public async Task<ActionResult<IEnumerable<GetItensDto>>> GetItens()
         {
-            // Opcional: Incluir as imagens do item na listagem
-            return await _context.Itens.Include(i => i.Imagens).ToListAsync();
+            var itens = await _context.Itens
+                .Select(i => new GetItensDto
+                {
+                    Id = i.Id,
+                    Nome = i.Nome,
+                    Preco = i.Preco,
+                    Estoque = i.Estoque,
+                    Imagem = i.Imagens
+                        .OrderBy(img => img.Id)
+                        .Select(img => new ImagemRelationDto
+                        {
+                            Id = img.Id,
+                            Url = img.Url
+                        })
+                        .FirstOrDefault()
+                })
+                .ToListAsync();
+
+            return Ok(itens);
         }
 
-        // GET: api/Itens/5
-        // Rota PÚBLICA
         [Authorize(Roles = "Gerente")]
         [HttpPost("Post")]
         public async Task<ActionResult<Item>> PostItem([FromForm] ItemUploadDto itemDto)
@@ -72,18 +86,30 @@ namespace KoridrawsPI.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Item>> GetItem(int id)
+        public async Task<ActionResult<GetItemDto>> GetItem(int id)
         {
             var item = await _context.Itens
-                .Include(i => i.Imagens)
-                .FirstOrDefaultAsync(i => i.Id == id);
+                .Where(i => i.Id == id)
+                .Select(i => new GetItemDto
+                {
+                    Id = i.Id,
+                    Nome = i.Nome,
+                    Preco = i.Preco,
+                    Estoque = i.Estoque,
+                    Imagens = i.Imagens.Select(img => new ImagemRelationDto
+                    {
+                        Id = img.Id,
+                        Url = img.Url
+                    }).ToList()
+                })
+                .FirstOrDefaultAsync();
 
             if (item == null)
             {
                 return NotFound();
             }
 
-            return item;
+            return Ok(item);
         }
 
         [Authorize(Roles = "Gerente")]
