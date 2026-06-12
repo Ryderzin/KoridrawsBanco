@@ -38,7 +38,8 @@ namespace KoridrawsPI.Controllers
                         .Select(img => new ImagemRelationDto
                         {
                             Id = img.Id,
-                            Url = img.Url
+                            Url = img.Url,
+                            CaminhoCloud = img.CaminhoCloud,
                         })
                         .FirstOrDefault()
                 })
@@ -99,7 +100,8 @@ namespace KoridrawsPI.Controllers
                     Imagens = i.Imagens.Select(img => new ImagemRelationDto
                     {
                         Id = img.Id,
-                        Url = img.Url
+                        Url = img.Url,
+                        CaminhoCloud = img.CaminhoCloud
                     }).ToList()
                 })
                 .FirstOrDefaultAsync();
