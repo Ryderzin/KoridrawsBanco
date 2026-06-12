@@ -8,7 +8,7 @@ namespace KoridrawsPI.Services
     {
         private readonly string _credentialsPath = "client_secret.json";
         private readonly string _folderId = "1v6sGvy2gHUgqSuFBFXy6lLppahBXoHHr";
-        private readonly string[] Scopes = { DriveService.ScopeConstants.DriveFile };
+        private readonly string[] Scopes = { DriveService.ScopeConstants.Drive};
 
         private DriveService ObterServico()
         {
